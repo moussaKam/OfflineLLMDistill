@@ -11,6 +11,13 @@ def load_config(config_path):
 def parse_args():
     parser = argparse.ArgumentParser(description="Override config parameters")
 
+    parser.add_argument(
+        "--config_path",
+        type=str,
+        default="config.yaml",
+        help="Path to the configuration file",
+    )
+
     # Dataset arguments
     parser.add_argument("--dataset.name_or_path", type=str, help="Path to dataset file")
     parser.add_argument("--dataset.split", type=str, help="Dataset split to use")
@@ -81,6 +88,14 @@ def parse_args():
         "--distillation.inference_outputs_dir",
         type=str,
         help="Inference outputs directory",
+    )
+
+    # vllm arguments
+    parser.add_argument(
+        "--vllm.tensor_parallel_size", type=int, help="Size of the tensor parallelism"
+    )
+    parser.add_argument(
+        "--vllm.gpu_memory_utilization", type=float, help="GPU memory utilization"
     )
 
     # Model config arguments

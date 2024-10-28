@@ -2,8 +2,7 @@ import pandas as pd
 from vllm import LLM, SamplingParams
 import torch
 import os
-from config_loader import load_and_override_config
-
+from config_loader import load_and_override_config, parse_args
 
 def get_prompts(input, output=None):
     messages = [
@@ -13,8 +12,9 @@ def get_prompts(input, output=None):
         messages.append({"role": "assistant", "content": output})
     return messages
 
-
-config = load_and_override_config("config.yaml")
+args = parse_args()
+config_path = args.pop("config_path")
+config = load_and_override_config(config_path)
 
 df = pd.read_json(
     config["dataset"]["name_or_path"],
@@ -24,10 +24,10 @@ df = pd.read_json(
 
 llm = LLM(
     model=config["models"]["teacher"],
-    tensor_parallel_size=1,
+    tensor_parallel_size=config["vllm"]["tensor_parallel_size"],
     trust_remote_code=True,
     dtype="auto",
-    gpu_memory_utilization=0.95,
+    gpu_memory_utilization=config["vllm"]["gpu_memory_utilization"],
     max_logprobs=max(20, config["distillation"]["top_k"]),
     enable_chunked_prefill=True,
 )
