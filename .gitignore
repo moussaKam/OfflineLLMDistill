@@ -2,6 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
+data/
+playground.ipynb
+results_distillation/
+results_student_models/
 
 # C extensions
 *.so
