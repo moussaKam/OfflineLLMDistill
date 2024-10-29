@@ -3,26 +3,25 @@ dataset:
   split: "train"
   num_samples: 2000
 models:
-  student: "Qwen/Qwen2.5-1.5B-Instruct"
-  teacher: "Qwen/Qwen2.5-7B-Instruct"
+  student: "Qwen/Qwen2.5-0.5B-Instruct"
+  teacher: "Qwen/Qwen2.5-72B-Instruct"
+  dtype: "bfloat16"
 
 tokenizer:
   max_length: 8196
 
 training:
-  output_dir: "./results_Qwen2.5-1.5B-Instruct_alpha_1_topk_20"
+  output_dir: "./results_distillation"
   num_train_epochs: 1
   per_device_train_batch_size: 2
   gradient_accumulation_steps: 1
   save_strategy: "epoch"
-  logging_steps: 1
-  learning_rate: 2e-5
+  logging_steps: 50
+  learning_rate: 0.00002
   weight_decay: 0.05
   warmup_ratio: 0.1
   lr_scheduler_type: "cosine"
   resume_from_checkpoint: null
-  fp16: false
-  bf16: true
   remove_unused_columns: false
   gradient_checkpointing: true
 
