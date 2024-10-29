@@ -104,7 +104,19 @@ def parse_args():
         type=lambda x: x.lower() == "true",
         help="Use flash attention",
     )
-    
+
+    parser.add_argument(
+        "--train_on_completion_only",
+        type=lambda x: x.lower() == "true",
+        help="Train on completion only",
+    )
+
+    parser.add_argument(
+        "--response_template",
+        type=str,
+        help="Response template",
+    )
+
     args = parser.parse_args()
     return vars(args)
 

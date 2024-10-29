@@ -36,5 +36,5 @@ distillation:
 model_config:
   use_flash_attention: true
 
-use_deepspeed: false
-deepspeed_config_file: "/home/mkamaleddine/DistillKit/deepspeed_configs/zero3_bf16.json" 
+train_on_completion_only: true
+response_template: "\n<|im_start|>assistant\n"

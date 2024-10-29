@@ -87,7 +87,7 @@ def add_logits_to_example(example, index):
     top_k = config["distillation"]["top_k"]
     max_length = config["tokenizer"]["max_length"]
     dtype = dtype_map[config["models"]["dtype"]]
-    
+
     # Retrieve and apply in-place exponential to avoid intermediate allocations
     top_k_probs = saved_logits[index]["top_k_logprobs"][:, :top_k].exp_()
     top_k_indices = saved_logits[index]["top_k_indexes"][:, :top_k]
@@ -96,11 +96,9 @@ def add_logits_to_example(example, index):
 
     # Create the padded tensors only if padding is needed
     if original_length < max_length:
-        padded_probs = torch.zeros(
-            max_length, top_k, dtype=dtype
-        )
+        padded_probs = torch.zeros(max_length, top_k, dtype=dtype)
         padded_indices = torch.zeros(max_length, top_k, dtype=torch.int64)
-        
+
         # Fill in only the valid range
         padded_probs[:original_length, :] = top_k_probs
         padded_indices[:original_length, :] = top_k_indices
@@ -175,10 +173,11 @@ training_arguments = TrainingArguments(
     **config["training"],
 )
 
-response_template = "\n<|im_start|>assistant\n"
-collator = DataCollatorForCompletionOnlyLM(
-    response_template, tokenizer=student_tokenizer
-)
+if config["train_on_completion_only"]:
+    response_template = config["response_template"]
+    collator = DataCollatorForCompletionOnlyLM(
+        response_template, tokenizer=student_tokenizer
+    )
 
 # Create the custom SFT Trainer
 trainer = LogitsTrainer(
@@ -188,7 +187,7 @@ trainer = LogitsTrainer(
     tokenizer=student_tokenizer,
     args=training_arguments,
     max_seq_length=config["tokenizer"]["max_length"],
-    data_collator=collator,
+    data_collator=collator if config["train_on_completion_only"] else None,
 )
 
 trainer = accelerator.prepare(trainer)
