@@ -104,15 +104,7 @@ def parse_args():
         type=lambda x: x.lower() == "true",
         help="Use flash attention",
     )
-
-    # DeepSpeed arguments
-    parser.add_argument(
-        "--use_deepspeed", type=lambda x: x.lower() == "true", help="Enable DeepSpeed"
-    )
-    parser.add_argument(
-        "--deepspeed_config_file", type=str, help="Path to DeepSpeed config file"
-    )
-
+    
     args = parser.parse_args()
     return vars(args)
 
