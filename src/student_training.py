@@ -30,9 +30,10 @@ dataset = load_dataset(
     data_files=os.path.join(
         config["distillation"]["inference_outputs_dir"], "prompts_outputs.json"
     ),
-    split=config["dataset"]["split"],
+    split="train",
 )
 if "num_samples" in config["dataset"]:
+    # dataset["train"] = dataset["train"].select(range(config["dataset"]["num_samples"]))
     dataset = dataset.select(range(config["dataset"]["num_samples"]))
 
 student_tokenizer = AutoTokenizer.from_pretrained(config["models"]["student"])
@@ -45,7 +46,7 @@ def get_text(example):
 # Preprocess and tokenize the dataset
 print("Preprocessing and tokenizing dataset...")
 original_columns = dataset.column_names
-dataset = dataset.map(get_text, remove_columns=original_columns)
+dataset = dataset.map(get_text, remove_columns=original_columns, num_proc=1)
 
 
 def tokenize_function(examples):
@@ -69,17 +70,6 @@ if config["model_config"]["use_flash_attention"]:
 student_model = AutoModelForCausalLM.from_pretrained(
     config["models"]["student"], **model_kwargs
 )
-
-import time
-
-t1 = time.time()
-saved_logits = torch.load(
-    os.path.join(
-        config["distillation"]["inference_outputs_dir"], "top_k_logits_and_indices.pt"
-    )
-)
-t2 = time.time()
-print("Time to load teacher logits: ", t2 - t1)
 
 
 def add_logits_to_example(example, index):
@@ -114,13 +104,19 @@ def add_logits_to_example(example, index):
     return example
 
 
-tokenized_dataset = tokenized_dataset.map(
-    lambda example, idx: add_logits_to_example(example, idx),
-    with_indices=True,
-    num_proc=20,
-)
+if config["distillation"]["alpha"] > 0:
+    saved_logits = torch.load(
+        os.path.join(
+            config["distillation"]["inference_outputs_dir"],
+            "top_k_logits_and_indices.pt",
+        )
+    )
+    tokenized_dataset = tokenized_dataset.map(
+        lambda example, idx: add_logits_to_example(example, idx),
+        with_indices=True,
+        num_proc=20,
+    )
 
-tokenized_dataset = tokenized_dataset.train_test_split(test_size=0.01)
 
 
 class LogitsTrainer(SFTTrainer):
@@ -182,8 +178,7 @@ if config["train_on_completion_only"]:
 # Create the custom SFT Trainer
 trainer = LogitsTrainer(
     model=student_model,
-    train_dataset=tokenized_dataset["train"],
-    eval_dataset=tokenized_dataset["test"],
+    train_dataset=tokenized_dataset,
     tokenizer=student_tokenizer,
     args=training_arguments,
     max_seq_length=config["tokenizer"]["max_length"],

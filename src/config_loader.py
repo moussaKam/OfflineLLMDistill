@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument("--dataset.name_or_path", type=str, help="Path to dataset file")
     parser.add_argument("--dataset.split", type=str, help="Dataset split to use")
     parser.add_argument(
-        "--dataset.num_samples", type=int, help="Number of samples to use"
+        "--dataset.num_samples", type=int, help="Number of samples to use", default=None
     )
 
     # Model arguments
